@@ -34,6 +34,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const drawerWidth = 260;
 
@@ -50,8 +51,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const role = user.role || '';
+  const { user, logout } = useAuth();
+  const role = user?.role || '';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -71,8 +72,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     } catch (e) {
       // ignore
     }
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
+    logout();
     navigate('/login');
   };
 
