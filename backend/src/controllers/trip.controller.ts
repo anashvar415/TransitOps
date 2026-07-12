@@ -4,7 +4,7 @@ import { BadRequestError, ConflictError, NotFoundError, ForbiddenError } from '.
 import { TripStatus, VehicleStatus, DriverStatus } from '@prisma/client';
 
 export const getTrips = async (req: any, res: Response, next: NextFunction) => {
-  const { status, vehicleId, driverId, page = 1, limit = 10 } = req.query;
+  const { status, vehicleId, driverId, search, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 10 } = req.query;
 
   const skip = (Number(page) - 1) * Number(limit);
   const take = Number(limit);
@@ -14,13 +14,20 @@ export const getTrips = async (req: any, res: Response, next: NextFunction) => {
   if (vehicleId) where.vehicleId = vehicleId as string;
   if (driverId) where.driverId = driverId as string;
 
+  if (search) {
+    where.OR = [
+      { source: { contains: search as string, mode: 'insensitive' } },
+      { destination: { contains: search as string, mode: 'insensitive' } },
+    ];
+  }
+
   try {
     const [trips, total] = await prisma.$transaction([
       prisma.trip.findMany({
         where,
         skip,
         take,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc' },
         include: {
           vehicle: true,
           driver: true,

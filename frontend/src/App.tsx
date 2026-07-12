@@ -9,7 +9,6 @@ import RouteGuard from './components/RouteGuard';
 
 // Import existing pages
 import Login from './pages/Login';
-import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import Vehicles from './pages/Vehicles';
 import Drivers from './pages/Drivers';
@@ -93,7 +92,6 @@ function App() {
               <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
                 
                 {/* Protected Routes */}
                 <Route element={<RouteGuard />}>

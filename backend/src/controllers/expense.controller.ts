@@ -3,18 +3,36 @@ import prisma from '../utils/db';
 import { NotFoundError } from '../utils/errors';
 
 export const getFuelLogs = async (req: any, res: Response, next: NextFunction) => {
-  const { vehicleId } = req.query;
+  const { vehicleId, startDate, endDate, sortBy = 'date', sortOrder = 'desc', page = 1, limit = 10 } = req.query;
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const take = Number(limit);
 
   const where: any = {};
   if (vehicleId) where.vehicleId = vehicleId as string;
+  if (startDate || endDate) {
+    where.date = {};
+    if (startDate) where.date.gte = new Date(startDate as string);
+    if (endDate) where.date.lte = new Date(endDate as string);
+  }
 
   try {
-    const logs = await prisma.fuelLog.findMany({
-      where,
-      orderBy: { date: 'desc' },
-      include: { vehicle: true },
+    const [logs, total] = await prisma.$transaction([
+      prisma.fuelLog.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc' },
+        include: { vehicle: true },
+      }),
+      prisma.fuelLog.count({ where }),
+    ]);
+    res.json({
+      data: logs,
+      total,
+      page: Number(page),
+      limit: Number(limit),
     });
-    res.json(logs);
   } catch (error) {
     next(error);
   }
@@ -45,18 +63,36 @@ export const createFuelLog = async (req: any, res: Response, next: NextFunction)
 };
 
 export const getExpenses = async (req: any, res: Response, next: NextFunction) => {
-  const { vehicleId } = req.query;
+  const { vehicleId, startDate, endDate, sortBy = 'date', sortOrder = 'desc', page = 1, limit = 10 } = req.query;
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const take = Number(limit);
 
   const where: any = {};
   if (vehicleId) where.vehicleId = vehicleId as string;
+  if (startDate || endDate) {
+    where.date = {};
+    if (startDate) where.date.gte = new Date(startDate as string);
+    if (endDate) where.date.lte = new Date(endDate as string);
+  }
 
   try {
-    const expenses = await prisma.expense.findMany({
-      where,
-      orderBy: { date: 'desc' },
-      include: { vehicle: true },
+    const [expenses, total] = await prisma.$transaction([
+      prisma.expense.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc' },
+        include: { vehicle: true },
+      }),
+      prisma.expense.count({ where }),
+    ]);
+    res.json({
+      data: expenses,
+      total,
+      page: Number(page),
+      limit: Number(limit),
     });
-    res.json(expenses);
   } catch (error) {
     next(error);
   }

@@ -4,7 +4,7 @@ import { ConflictError, NotFoundError } from '../utils/errors';
 import { DriverStatus } from '@prisma/client';
 
 export const getDrivers = async (req: Request, res: Response, next: NextFunction) => {
-  const { status, licenseCategory, page = 1, limit = 10 } = req.query;
+  const { status, licenseCategory, search, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 10 } = req.query;
 
   const skip = (Number(page) - 1) * Number(limit);
   const take = Number(limit);
@@ -13,13 +13,20 @@ export const getDrivers = async (req: Request, res: Response, next: NextFunction
   if (status) where.status = status as DriverStatus;
   if (licenseCategory) where.licenseCategory = licenseCategory as string;
 
+  if (search) {
+    where.OR = [
+      { name: { contains: search as string, mode: 'insensitive' } },
+      { licenseNumber: { contains: search as string, mode: 'insensitive' } },
+    ];
+  }
+
   try {
     const [drivers, total] = await prisma.$transaction([
       prisma.driver.findMany({
         where,
         skip,
         take,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc' },
         include: { user: { select: { email: true, name: true } } },
       }),
       prisma.driver.count({ where }),

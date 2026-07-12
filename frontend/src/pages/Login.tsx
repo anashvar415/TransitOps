@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -11,7 +11,6 @@ import {
   CircularProgress,
   InputAdornment,
   IconButton,
-  Link,
 } from '@mui/material';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import api from '../services/api';
@@ -38,8 +37,8 @@ const Login: React.FC = () => {
       login(accessToken, user);
 
       // Redirect depending on user role permissions
-      if (user.role === 'SAFETY_OFFICER') {
-        navigate('/drivers');
+      if (user.role === 'SAFETY_OFFICER' || user.role === 'DRIVER') {
+        navigate('/vehicles');
       } else {
         navigate('/dashboard');
       }
@@ -174,12 +173,13 @@ const Login: React.FC = () => {
           </form>
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>
-              Don't have an account?{' '}
-              <Link component={RouterLink} to="/signup" sx={{ color: '#8b5cf6', textDecoration: 'none', fontWeight: 600 }}>
-                Sign Up
-              </Link>
-            </Typography>
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(139, 92, 246, 0.05)', borderRadius: '8px', border: '1px solid rgba(139, 92, 246, 0.2)', textAlign: 'left' }}>
+              <Typography variant="subtitle2" sx={{ color: '#8b5cf6', mb: 1, fontWeight: 600 }}>Demo Credentials (Password: Transit@123)</Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: 'var(--text-secondary)' }}>• Manager: manager@transitops.in</Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: 'var(--text-secondary)' }}>• Driver: driver@transitops.in</Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: 'var(--text-secondary)' }}>• Safety: safety@transitops.in</Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: 'var(--text-secondary)' }}>• Finance: finance@transitops.in</Typography>
+            </Box>
             <Typography variant="caption" sx={{ color: '#4b5563', display: 'block', mt: 2 }}>
               TransitOps v1.0.0
             </Typography>

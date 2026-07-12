@@ -4,7 +4,7 @@ import { ConflictError, NotFoundError } from '../utils/errors';
 import { VehicleStatus } from '@prisma/client';
 
 export const getVehicles = async (req: Request, res: Response, next: NextFunction) => {
-  const { status, type, region, page = 1, limit = 10 } = req.query;
+  const { status, type, region, search, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 10 } = req.query;
 
   const skip = (Number(page) - 1) * Number(limit);
   const take = Number(limit);
@@ -13,6 +13,13 @@ export const getVehicles = async (req: Request, res: Response, next: NextFunctio
   if (status) where.status = status as VehicleStatus;
   if (type) where.type = type as string;
   if (region) where.region = { contains: region as string, mode: 'insensitive' };
+  
+  if (search) {
+    where.OR = [
+      { name: { contains: search as string, mode: 'insensitive' } },
+      { registrationNumber: { contains: search as string, mode: 'insensitive' } },
+    ];
+  }
 
   try {
     const [vehicles, total] = await prisma.$transaction([
@@ -20,7 +27,7 @@ export const getVehicles = async (req: Request, res: Response, next: NextFunctio
         where,
         skip,
         take,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc' },
       }),
       prisma.vehicle.count({ where }),
     ]);

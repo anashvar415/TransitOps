@@ -5,9 +5,17 @@ import prisma from '../src/utils/db';
 let managerToken = '';
 
 beforeAll(async () => {
+  // Create a user on the fly for tests to ensure independence from DB state
+  const passwordHash = require('bcryptjs').hashSync('Transit@123', 10);
+  await prisma.user.upsert({
+    where: { email: 'test_manager@transitops.in' },
+    update: { passwordHash, role: 'FLEET_MANAGER' },
+    create: { name: 'Test Manager', email: 'test_manager@transitops.in', passwordHash, role: 'FLEET_MANAGER' }
+  });
+
   const loginRes = await request(app).post('/api/v1/auth/login').send({
-    email: 'manager@transitops.com',
-    password: 'Password123',
+    email: 'test_manager@transitops.in',
+    password: 'Transit@123',
   });
   managerToken = loginRes.body.accessToken;
 
@@ -58,9 +66,15 @@ describe('TransitOps Section 5 Example Workflow Integration Test', () => {
       // Wait, let's login as safety officer to be fully compliant with the RBAC!
       ;
 
+    await prisma.user.upsert({
+      where: { email: 'test_safety@transitops.in' },
+      update: { passwordHash: require('bcryptjs').hashSync('Transit@123', 10), role: 'SAFETY_OFFICER' },
+      create: { name: 'Test Safety', email: 'test_safety@transitops.in', passwordHash: require('bcryptjs').hashSync('Transit@123', 10), role: 'SAFETY_OFFICER' }
+    });
+
     const safetyLogin = await request(app).post('/api/v1/auth/login').send({
-      email: 'safety@transitops.com',
-      password: 'Password123',
+      email: 'test_safety@transitops.in',
+      password: 'Transit@123',
     });
     const safetyToken = safetyLogin.body.accessToken;
 

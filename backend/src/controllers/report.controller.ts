@@ -107,16 +107,42 @@ export const getFuelEfficiency = async (req: Request, res: Response, next: NextF
 
 export const getFleetUtilizationTrend = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Generate dummy historical trend for chart
-    const trend = [
-      { date: 'Mon', utilization: 65 },
-      { date: 'Tue', utilization: 72 },
-      { date: 'Wed', utilization: 80 },
-      { date: 'Thu', utilization: 78 },
-      { date: 'Fri', utilization: 85 },
-      { date: 'Sat', utilization: 50 },
-      { date: 'Sun', utilization: 45 },
-    ];
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d.toISOString().split('T')[0];
+    });
+
+    const totalVehicles = await prisma.vehicle.count({
+      where: { status: { not: VehicleStatus.RETIRED } },
+    });
+
+    const trend = await Promise.all(last7Days.map(async (dateStr) => {
+      const startOfDay = new Date(dateStr);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(dateStr);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Vehicles active on that day (trip dispatched before end of day, completed after start of day)
+      const activeCount = await prisma.trip.findMany({
+        where: {
+          dispatchedAt: { lte: endOfDay },
+          OR: [
+            { completedAt: { gte: startOfDay } },
+            { completedAt: null }
+          ]
+        },
+        distinct: ['vehicleId'],
+        select: { vehicleId: true }
+      });
+
+      const util = totalVehicles > 0 ? (activeCount.length / totalVehicles) * 100 : 0;
+      return {
+        date: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }),
+        utilization: Number(util.toFixed(1))
+      };
+    }));
+
     res.json(trend);
   } catch (error) {
     next(error);
@@ -222,6 +248,139 @@ export const exportCSV = async (req: Request, res: Response, next: NextFunction)
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="transitops-report.csv"');
     res.status(200).send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTodayKPIs = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const tripsToday = await prisma.trip.count({
+      where: { createdAt: { gte: startOfDay } },
+    });
+
+    const activeDrivers = await prisma.driver.count({
+      where: { status: DriverStatus.ON_TRIP },
+    });
+
+    const fuelThisMonthAggr = await prisma.fuelLog.aggregate({
+      _sum: { cost: true },
+      where: { date: { gte: startOfMonth } },
+    });
+
+    const revThisMonthAggr = await prisma.trip.aggregate({
+      _sum: { revenue: true },
+      where: { 
+        status: TripStatus.COMPLETED,
+        completedAt: { gte: startOfMonth } 
+      },
+    });
+
+    res.json({
+      tripsToday,
+      activeDrivers,
+      fuelCostThisMonth: Number(fuelThisMonthAggr._sum.cost || 0),
+      revenueThisMonth: Number(revThisMonthAggr._sum.revenue || 0),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTripsTrend = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d.toISOString().split('T')[0];
+    });
+
+    const trend = await Promise.all(last7Days.map(async (dateStr) => {
+      const startOfDay = new Date(dateStr);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(dateStr);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const count = await prisma.trip.count({
+        where: { createdAt: { gte: startOfDay, lte: endOfDay } }
+      });
+      return {
+        date: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }),
+        trips: count
+      };
+    }));
+    res.json(trend);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCostTrend = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d.toISOString().split('T')[0];
+    });
+
+    const trend = await Promise.all(last7Days.map(async (dateStr) => {
+      const startOfDay = new Date(dateStr);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(dateStr);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const fuel = await prisma.fuelLog.aggregate({
+        _sum: { cost: true },
+        where: { date: { gte: startOfDay, lte: endOfDay } }
+      });
+      const maintenance = await prisma.maintenanceLog.aggregate({
+        _sum: { cost: true },
+        where: { openedAt: { gte: startOfDay, lte: endOfDay } }
+      });
+      const expense = await prisma.expense.aggregate({
+        _sum: { amount: true },
+        where: { date: { gte: startOfDay, lte: endOfDay } }
+      });
+
+      return {
+        date: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }),
+        fuel: Number(fuel._sum.cost || 0),
+        maintenance: Number(maintenance._sum.cost || 0),
+        other: Number(expense._sum.amount || 0),
+      };
+    }));
+    res.json(trend);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getExpiringLicenses = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const next30Days = new Date();
+    next30Days.setDate(next30Days.getDate() + 30);
+
+    const drivers = await prisma.driver.findMany({
+      where: {
+        licenseExpiryDate: { lte: next30Days }
+      },
+      orderBy: { licenseExpiryDate: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        licenseNumber: true,
+        licenseExpiryDate: true,
+        status: true
+      }
+    });
+    res.json(drivers);
   } catch (error) {
     next(error);
   }
