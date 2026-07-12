@@ -1,11 +1,13 @@
 import React from 'react';
-import { Box, Typography, Grid, Paper, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, Grid, Paper, CircularProgress, Alert, useTheme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
 import api from '../services/api';
 import ExpenseChart from '../components/charts/ExpenseChart';
 
 const TripVolumeChart: React.FC<{ trips: any[] }> = ({ trips }) => {
+  const theme = useTheme();
+  
   const aggregated = trips.reduce((acc, curr) => {
     const existing = acc.find((item: any) => item.name === curr.status);
     if (existing) {
@@ -19,7 +21,7 @@ const TripVolumeChart: React.FC<{ trips: any[] }> = ({ trips }) => {
   if (aggregated.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
-        <Typography sx={{ color: '#9ca3af' }}>No trip data available for chart.</Typography>
+        <Typography sx={{ color: theme.palette.text.secondary }}>No trip data available for chart.</Typography>
       </Box>
     );
   }
@@ -28,12 +30,12 @@ const TripVolumeChart: React.FC<{ trips: any[] }> = ({ trips }) => {
     <Box sx={{ height: 400, width: '100%' }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={aggregated} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-          <XAxis dataKey="name" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-          <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
+          <XAxis dataKey="name" stroke={theme.palette.text.secondary} tick={{ fill: theme.palette.text.secondary }} axisLine={false} tickLine={false} />
+          <YAxis stroke={theme.palette.text.secondary} tick={{ fill: theme.palette.text.secondary }} axisLine={false} tickLine={false} />
           <RechartsTooltip 
-            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-            contentStyle={{ backgroundColor: '#161823', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+            cursor={{ fill: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
+            contentStyle={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary, border: `1px solid ${theme.palette.divider}`, borderRadius: '8px' }}
             itemStyle={{ color: '#8b5cf6' }}
           />
           <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
@@ -63,13 +65,15 @@ const Reports: React.FC = () => {
   const isLoading = loadingExpenses || loadingTrips;
   const error = expensesError || tripsError;
 
+  const theme = useTheme();
+
   return (
     <Box>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Outfit, sans-serif' }}>
           Analytical Reports
         </Typography>
-        <Typography sx={{ color: '#9ca3af', mt: 1 }}>
+        <Typography sx={{ color: theme.palette.text.secondary, mt: 1 }}>
           Comprehensive visualization of fleet financial and operational metrics.
         </Typography>
       </Box>
@@ -87,7 +91,7 @@ const Reports: React.FC = () => {
       ) : (
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <Paper className="glass-panel" sx={{ p: 3, bgcolor: 'rgba(22, 24, 35, 0.4)', borderRadius: 2 }}>
+            <Paper className="glass-panel" sx={{ p: 3, bgcolor: 'transparent', borderRadius: 2 }}>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
                 Expense Distribution Breakdown
               </Typography>
@@ -96,7 +100,7 @@ const Reports: React.FC = () => {
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <Paper className="glass-panel" sx={{ p: 3, bgcolor: 'rgba(22, 24, 35, 0.4)', borderRadius: 2 }}>
+            <Paper className="glass-panel" sx={{ p: 3, bgcolor: 'transparent', borderRadius: 2 }}>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
                 Trip Volume by Status
               </Typography>

@@ -10,6 +10,7 @@ import {
   IconButton,
   Tooltip,
   TablePagination,
+  useTheme,
 } from '@mui/material';
 import { Edit, Trash2 } from 'lucide-react';
 import StatusBadge from '../StatusBadge';
@@ -49,11 +50,13 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
   onEdit,
   onRetire,
 }) => {
+  const theme = useTheme();
+
   return (
-    <TableContainer component={Paper} className="glass-panel" sx={{ bgcolor: 'rgba(22, 24, 35, 0.4)' }}>
+    <TableContainer component={Paper} className="glass-panel" sx={{ bgcolor: 'transparent' }}>
       <Table>
         <TableHead>
-          <TableRow sx={{ '& th': { color: '#9ca3af', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.08)' } }}>
+          <TableRow sx={{ '& th': { color: 'text.secondary', fontWeight: 600, borderBottom: `1px solid ${theme.palette.divider}` } }}>
             <TableCell>Reg. Number</TableCell>
             <TableCell>Name/Model</TableCell>
             <TableCell>Type</TableCell>
@@ -66,7 +69,7 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
         </TableHead>
         <TableBody>
           {vehicles.map((v) => (
-            <TableRow key={v.id} sx={{ '& td': { borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#f3f4f6' } }}>
+            <TableRow key={v.id} sx={{ '& td': { borderBottom: `1px solid ${theme.palette.divider}`, color: 'text.primary' } }}>
               <TableCell style={{ fontWeight: 600 }}>{v.registrationNumber}</TableCell>
               <TableCell>{v.name}</TableCell>
               <TableCell>{v.type}</TableCell>
@@ -77,13 +80,13 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
               {isManager && (
                 <TableCell align="right">
                   <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => onEdit(v)} sx={{ color: '#9ca3af', '&:hover': { color: '#8b5cf6' } }}>
+                    <IconButton size="small" onClick={() => onEdit(v)} sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
                       <Edit size={16} />
                     </IconButton>
                   </Tooltip>
                   {v.status !== 'RETIRED' && (
                     <Tooltip title="Retire">
-                      <IconButton size="small" onClick={() => onRetire(v.id)} sx={{ color: '#9ca3af', '&:hover': { color: '#ef4444' } }}>
+                      <IconButton size="small" onClick={() => onRetire(v.id)} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}>
                         <Trash2 size={16} />
                       </IconButton>
                     </Tooltip>
@@ -94,7 +97,7 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
           ))}
           {vehicles.length === 0 && (
             <TableRow>
-              <TableCell colSpan={isManager ? 8 : 7} align="center" sx={{ py: 6, color: '#6b7280' }}>
+              <TableCell colSpan={isManager ? 8 : 7} align="center" sx={{ py: 6, color: 'text.secondary' }}>
                 No vehicles found
               </TableCell>
             </TableRow>
@@ -109,7 +112,7 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
         page={page}
         onPageChange={(e, newPage) => onPageChange(newPage)}
         onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
-        sx={{ color: '#9ca3af', borderTop: '1px solid rgba(255,255,255,0.08)' }}
+        sx={{ color: 'text.secondary', borderTop: `1px solid ${theme.palette.divider}` }}
       />
     </TableContainer>
   );

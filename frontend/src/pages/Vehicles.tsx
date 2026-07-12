@@ -184,7 +184,7 @@ const Vehicles: React.FC = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 600, color: '#f3f4f6', bgcolor: '#161823' }}>
+        <DialogTitle sx={{ fontWeight: 600, color: 'text.primary', bgcolor: 'background.paper' }}>
           {selectedVehicle ? 'Edit Vehicle Profile' : 'Register New Vehicle'}
         </DialogTitle>
         <VehicleForm 
