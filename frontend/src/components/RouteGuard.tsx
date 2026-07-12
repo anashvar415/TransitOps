@@ -14,7 +14,10 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Redirect to dashboard if user has invalid role for page
+    // Redirect to a safe default page based on role to prevent infinite redirect loops
+    if (user.role === 'DRIVER' || user.role === 'SAFETY_OFFICER') {
+      return <Navigate to="/vehicles" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 

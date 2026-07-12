@@ -4,19 +4,38 @@ import { BadRequestError, NotFoundError } from '../utils/errors';
 import { MaintenanceStatus, VehicleStatus } from '@prisma/client';
 
 export const getMaintenanceLogs = async (req: any, res: Response, next: NextFunction) => {
-  const { vehicleId, status } = req.query;
+  const { vehicleId, status, startDate, endDate, sortBy = 'openedAt', sortOrder = 'desc', page = 1, limit = 10 } = req.query;
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const take = Number(limit);
 
   const where: any = {};
   if (vehicleId) where.vehicleId = vehicleId as string;
   if (status) where.status = status as MaintenanceStatus;
+  
+  if (startDate || endDate) {
+    where.openedAt = {};
+    if (startDate) where.openedAt.gte = new Date(startDate as string);
+    if (endDate) where.openedAt.lte = new Date(endDate as string);
+  }
 
   try {
-    const logs = await prisma.maintenanceLog.findMany({
-      where,
-      orderBy: { openedAt: 'desc' },
-      include: { vehicle: true },
+    const [logs, total] = await prisma.$transaction([
+      prisma.maintenanceLog.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc' },
+        include: { vehicle: true },
+      }),
+      prisma.maintenanceLog.count({ where }),
+    ]);
+    res.json({
+      data: logs,
+      total,
+      page: Number(page),
+      limit: Number(limit),
     });
-    res.json(logs);
   } catch (error) {
     next(error);
   }
