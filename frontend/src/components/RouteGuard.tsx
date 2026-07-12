@@ -1,19 +1,17 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 interface RouteGuardProps {
   allowedRoles?: string[];
 }
 
 const RouteGuard: React.FC<RouteGuardProps> = ({ allowedRoles }) => {
-  const token = localStorage.getItem('accessToken');
-  const userJson = localStorage.getItem('user');
+  const { isAuthenticated, user } = useAuth();
 
-  if (!token || !userJson) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
-
-  const user = JSON.parse(userJson);
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to dashboard if user has invalid role for page

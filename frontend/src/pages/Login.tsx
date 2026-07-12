@@ -14,9 +14,11 @@ import {
 } from '@mui/material';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,8 +34,7 @@ const Login: React.FC = () => {
       const res = await api.post('/auth/login', { email, password });
       const { accessToken, user } = res.data;
       
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      login(accessToken, user);
 
       // Redirect depending on user role permissions
       if (user.role === 'SAFETY_OFFICER') {

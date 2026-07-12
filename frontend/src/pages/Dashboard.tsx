@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Grid,
   Card,
@@ -22,18 +23,18 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip as ChartTooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   Legend,
 } from 'recharts';
 import api from '../services/api';
+import KPICard from '../components/KPICard';
+import UtilizationChart from '../components/charts/UtilizationChart';
 
 interface DashboardKPIs {
   activeVehicles: number;
@@ -54,18 +55,12 @@ interface CostBreakdown {
 }
 
 const Dashboard: React.FC = () => {
-  const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
-  const [utilizationTrend, setUtilizationTrend] = useState<any[]>([]);
-  const [costBreakdown, setCostBreakdown] = useState<CostBreakdown[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // Filters
   const [typeFilter, setTypeFilter] = useState('');
   const [regionFilter, setRegionFilter] = useState('');
 
-  const fetchDashboardData = async () => {
-    try {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboard', typeFilter, regionFilter],
+    queryFn: async () => {
       const params: any = {};
       if (typeFilter) params.type = typeFilter;
       if (regionFilter) params.region = regionFilter;
@@ -76,21 +71,15 @@ const Dashboard: React.FC = () => {
         api.get('/reports/operational-cost'),
       ]);
 
-      setKpis(kpisRes.data);
-      setUtilizationTrend(trendRes.data);
-      setCostBreakdown(costRes.data.slice(0, 5)); // top 5 vehicles
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return {
+        kpis: kpisRes.data as DashboardKPIs,
+        utilizationTrend: trendRes.data,
+        costBreakdown: costRes.data.slice(0, 5) as CostBreakdown[],
+      };
+    },
+  });
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [typeFilter, regionFilter]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
         <CircularProgress color="primary" />
@@ -99,8 +88,10 @@ const Dashboard: React.FC = () => {
   }
 
   if (error) {
-    return <Alert severity="error">{error}</Alert>;
+    return <Alert severity="error">{(error as any).response?.data?.error || 'Failed to load dashboard data'}</Alert>;
   }
+
+  const { kpis, utilizationTrend, costBreakdown } = data || {};
 
   const kpiList = [
     { title: 'Active Vehicles', value: kpis?.activeVehicles, icon: <Truck size={24} color="#3b82f6" />, desc: 'Vehicles currently on trip' },
@@ -109,7 +100,7 @@ const Dashboard: React.FC = () => {
     { title: 'Active Trips', value: kpis?.activeTrips, icon: <MapPin size={24} color="#06b6d4" />, desc: 'Active dispatched trips' },
     { title: 'Pending Trips', value: kpis?.pendingTrips, icon: <CalendarRange size={24} color="#8b5cf6" />, desc: 'Trips in draft' },
     { title: 'Drivers On Duty', value: kpis?.driversOnDuty, icon: <Users2 size={24} color="#ec4899" />, desc: 'Available & active drivers' },
-    { title: 'Fleet Utilization', value: `${kpis?.fleetUtilization}%`, icon: <TrendingUp size={24} color="#a855f7" />, desc: 'Active / non-retired vehicles' },
+    { title: 'Fleet Utilization', value: kpis ? `${kpis.fleetUtilization}%` : '-', icon: <TrendingUp size={24} color="#a855f7" />, desc: 'Active / non-retired vehicles' },
   ];
 
   return (
@@ -145,22 +136,7 @@ const Dashboard: React.FC = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {kpiList.map((kpi) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={kpi.title}>
-            <Card className="glass-panel" sx={{ bgcolor: 'rgba(22, 24, 35, 0.6)', height: '100%' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="body2" sx={{ color: '#9ca3af', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                    {kpi.title}
-                  </Typography>
-                  {kpi.icon}
-                </Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, fontFamily: 'Outfit, sans-serif' }}>
-                  {kpi.value}
-                </Typography>
-                <Typography variant="caption" sx={{ color: '#6b7280' }}>
-                  {kpi.desc}
-                </Typography>
-              </CardContent>
-            </Card>
+            <KPICard title={kpi.title} value={kpi.value} icon={kpi.icon} desc={kpi.desc} />
           </Grid>
         ))}
       </Grid>
@@ -175,21 +151,7 @@ const Dashboard: React.FC = () => {
                 Fleet Utilization Trend (%)
               </Typography>
               <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={utilizationTrend}>
-                    <defs>
-                      <linearGradient id="utilizationColor" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="date" stroke="#6b7280" fontSize={12} />
-                    <YAxis stroke="#6b7280" fontSize={12} domain={[0, 100]} />
-                    <ChartTooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: 'rgba(255,255,255,0.1)' }} />
-                    <Area type="monotone" dataKey="utilization" stroke="#8b5cf6" fillOpacity={1} fill="url(#utilizationColor)" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <UtilizationChart data={utilizationTrend || []} />
               </Box>
             </CardContent>
           </Card>
