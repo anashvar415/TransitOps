@@ -31,7 +31,6 @@ import {
   DollarSign,
   BarChart3,
   LogOut,
-  ChevronLeft,
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';

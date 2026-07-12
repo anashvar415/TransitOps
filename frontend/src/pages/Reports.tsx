@@ -1,9 +1,10 @@
 import React from 'react';
-import { Box, Typography, Grid, Paper, CircularProgress, Alert, useTheme } from '@mui/material';
+import { Box, Typography, Grid, Paper, CircularProgress, Alert, useTheme, Button } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
 import api from '../services/api';
 import ExpenseChart from '../components/charts/ExpenseChart';
+import { Download } from 'lucide-react';
 
 const TripVolumeChart: React.FC<{ trips: any[] }> = ({ trips }) => {
   const theme = useTheme();
@@ -67,15 +68,58 @@ const Reports: React.FC = () => {
 
   const theme = useTheme();
 
+  const handleDownloadCSV = () => {
+    if (!expensesRes || !tripsRes) return;
+    
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "--- Expense Report ---\n";
+    csvContent += "Type,Amount,Date,Notes\n";
+    expensesRes.forEach((exp: any) => {
+      csvContent += `${exp.type},${exp.amount},${new Date(exp.date).toLocaleDateString('en-IN')},"${(exp.notes || '').replace(/"/g, '""')}"\n`;
+    });
+    
+    csvContent += "\n--- Trip Report ---\n";
+    csvContent += "Source,Destination,Status,Departure Time\n";
+    tripsRes.forEach((trip: any) => {
+      csvContent += `"${trip.source}","${trip.destination}",${trip.status},${new Date(trip.departureTime).toLocaleDateString('en-IN')}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "transitops_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Box>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Outfit, sans-serif' }}>
-          Analytical Reports
-        </Typography>
-        <Typography sx={{ color: theme.palette.text.secondary, mt: 1 }}>
-          Comprehensive visualization of fleet financial and operational metrics.
-        </Typography>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Outfit, sans-serif' }}>
+            Analytical Reports
+          </Typography>
+          <Typography sx={{ color: theme.palette.text.secondary, mt: 1 }}>
+            Comprehensive visualization of fleet financial and operational metrics.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<Download size={18} />}
+          onClick={handleDownloadCSV}
+          disabled={isLoading}
+          sx={{
+            borderColor: theme.palette.divider,
+            color: theme.palette.text.primary,
+            textTransform: 'none',
+            fontWeight: 600,
+            borderRadius: '8px',
+            '&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+          }}
+        >
+          Download CSV
+        </Button>
       </Box>
 
       {error && (

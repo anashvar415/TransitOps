@@ -9,13 +9,15 @@ import {
   Paper,
   IconButton,
   Tooltip,
-  TablePagination,
   Box,
+  Typography,
   Chip,
   useTheme,
+  TablePagination,
 } from '@mui/material';
-import { Edit } from 'lucide-react';
+import { Edit, Users } from 'lucide-react';
 import StatusBadge from '../StatusBadge';
+import { TableLoadingSkeleton } from '../LoadingSkeleton';
 
 export interface Driver {
   id: string;
@@ -38,6 +40,7 @@ interface DriverTableProps {
   onPageChange: (newPage: number) => void;
   onRowsPerPageChange: (newRows: number) => void;
   onEdit: (driver: Driver) => void;
+  isLoading?: boolean;
 }
 
 const getExpiryHighlight = (dateStr: string) => {
@@ -64,6 +67,7 @@ const DriverTable: React.FC<DriverTableProps> = ({
   onPageChange,
   onRowsPerPageChange,
   onEdit,
+  isLoading = false,
 }) => {
   const theme = useTheme();
 
@@ -93,7 +97,7 @@ const DriverTable: React.FC<DriverTableProps> = ({
                 <TableCell>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                     <span style={{ color: expiryAlert ? expiryAlert.fontColor : 'inherit', fontWeight: expiryAlert ? 600 : 400 }}>
-                      {new Date(d.licenseExpiryDate).toLocaleDateString()}
+                      {new Date(d.licenseExpiryDate).toLocaleDateString('en-IN')}
                     </span>
                     {expiryAlert && (
                       <Chip
@@ -131,10 +135,15 @@ const DriverTable: React.FC<DriverTableProps> = ({
               </TableRow>
             );
           })}
-          {drivers.length === 0 && (
+          {isLoading && <TableLoadingSkeleton rows={rowsPerPage} columns={isSafetyOfficer ? 8 : 7} />}
+          {!isLoading && drivers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={isSafetyOfficer ? 8 : 7} align="center" sx={{ py: 6, color: 'text.secondary' }}>
-                No drivers found
+              <TableCell colSpan={isSafetyOfficer ? 8 : 7} align="center" sx={{ py: 8 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <Users size={48} color={theme.palette.text.disabled} />
+                  <Typography variant="h6" color="text.secondary">No drivers found</Typography>
+                  <Typography variant="body2" color="text.secondary">Try adjusting your search or filters.</Typography>
+                </Box>
               </TableCell>
             </TableRow>
           )}
@@ -146,7 +155,7 @@ const DriverTable: React.FC<DriverTableProps> = ({
         count={total}
         rowsPerPage={rowsPerPage}
         page={page}
-        onPageChange={(e, newPage) => onPageChange(newPage)}
+        onPageChange={(_, newPage) => onPageChange(newPage)}
         onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
         sx={{ color: 'text.secondary', borderTop: `1px solid ${theme.palette.divider}` }}
       />

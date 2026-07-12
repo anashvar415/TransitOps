@@ -11,17 +11,18 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import { Plus, Search } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import TripTable, { Trip } from '../components/tables/TripTable';
 import TripForm from '../components/forms/TripForm';
 
 const Trips: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canEdit = user?.role === 'FLEET_MANAGER' || user?.role === 'SAFETY_OFFICER';
   const queryClient = useQueryClient();
 
@@ -65,9 +66,11 @@ const Trips: React.FC = () => {
       // Invalidate available pools
       queryClient.invalidateQueries({ queryKey: ['available-drivers'] });
       queryClient.invalidateQueries({ queryKey: ['available-vehicles'] });
+      showToast(selectedTrip ? 'Trip updated successfully' : 'Trip dispatched successfully');
     },
     onError: (err: any) => {
       setFormError(err.response?.data?.error || 'Validation error saving trip');
+      showToast('Failed to save trip', 'error');
     }
   });
 
@@ -144,22 +147,17 @@ const Trips: React.FC = () => {
       </Box>
 
       {/* Trips Table */}
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <TripTable
-          trips={filteredTrips}
-          total={data?.total || 0}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          canEdit={canEdit}
-          onPageChange={setPage}
-          onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
-          onEdit={handleOpenEditDialog}
-        />
-      )}
+      <TripTable
+        trips={filteredTrips}
+        total={data?.total || 0}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        canEdit={canEdit}
+        isLoading={isLoading}
+        onPageChange={setPage}
+        onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
+        onEdit={handleOpenEditDialog}
+      />
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>

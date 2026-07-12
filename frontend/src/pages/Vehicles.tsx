@@ -11,17 +11,19 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import { Plus, Search } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import VehicleTable, { Vehicle } from '../components/tables/VehicleTable';
 import VehicleForm from '../components/forms/VehicleForm';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const Vehicles: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const isManager = user?.role === 'FLEET_MANAGER';
   const queryClient = useQueryClient();
 
@@ -35,6 +37,8 @@ const Vehicles: React.FC = () => {
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
 
   const { data, isLoading, error } = useQuery({
@@ -65,9 +69,11 @@ const Vehicles: React.FC = () => {
       setDialogOpen(false);
       setFormError('');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      showToast(selectedVehicle ? 'Vehicle updated successfully' : 'Vehicle added successfully');
     },
     onError: (err: any) => {
       setFormError(err.response?.data?.error || 'Validation error saving vehicle');
+      showToast('Failed to save vehicle', 'error');
     }
   });
 
@@ -76,8 +82,14 @@ const Vehicles: React.FC = () => {
       return await api.delete(`/vehicles/${id}`);
     },
     onSuccess: () => {
+      setDeleteConfirmOpen(false);
+      setVehicleToDelete(null);
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      showToast('Vehicle retired successfully');
     },
+    onError: () => {
+      showToast('Failed to retire vehicle', 'error');
+    }
   });
 
   const handleOpenCreateDialog = () => {
@@ -96,9 +108,14 @@ const Vehicles: React.FC = () => {
     await saveMutation.mutateAsync(payload);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to retire this vehicle? This will set its status to RETIRED.')) {
-      await retireMutation.mutateAsync(id);
+  const handleDelete = (id: string) => {
+    setVehicleToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (vehicleToDelete) {
+      await retireMutation.mutateAsync(vehicleToDelete);
     }
   };
 
@@ -164,23 +181,18 @@ const Vehicles: React.FC = () => {
       </Box>
 
       {/* Vehicles Table */}
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <VehicleTable
-          vehicles={data?.data || []}
-          total={data?.total || 0}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          isManager={isManager}
-          onPageChange={setPage}
-          onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
-          onEdit={handleOpenEditDialog}
-          onRetire={handleDelete}
-        />
-      )}
+      <VehicleTable
+        vehicles={data?.data || []}
+        total={data?.total || 0}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        isManager={isManager}
+        isLoading={isLoading}
+        onPageChange={setPage}
+        onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
+        onEdit={handleOpenEditDialog}
+        onRetire={handleDelete}
+      />
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -194,6 +206,15 @@ const Vehicles: React.FC = () => {
           error={formError} 
         />
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        title="Retire Vehicle"
+        message="Are you sure you want to retire this vehicle? Its status will be changed to RETIRED and it won't be available for new trips."
+        confirmText={retireMutation.isPending ? 'Retiring...' : 'Retire Vehicle'}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirmOpen(false)}
+      />
     </Box>
   );
 };

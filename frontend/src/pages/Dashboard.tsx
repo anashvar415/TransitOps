@@ -35,6 +35,7 @@ import {
 import api from '../services/api';
 import KPICard from '../components/KPICard';
 import UtilizationChart from '../components/charts/UtilizationChart';
+import { useAuth } from '../context/AuthContext';
 
 interface DashboardKPIs {
   activeVehicles: number;
@@ -56,6 +57,7 @@ interface CostBreakdown {
 
 const Dashboard: React.FC = () => {
   const theme = useTheme();
+  const { user } = useAuth();
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
   const [utilizationTrend, setUtilizationTrend] = useState<any[]>([]);
   const [costBreakdown, setCostBreakdown] = useState<any[]>([]);
@@ -115,6 +117,17 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Outfit, sans-serif' }}>
+            Welcome back, {user?.name?.split(' ')[0] || 'User'}!
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+            Here is what's happening with your fleet today.
+          </Typography>
+        </Box>
+      </Box>
+
       {/* Filter controls */}
       <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }} className="glass-panel" style={{ padding: '16px' }}>
         <Typography variant="subtitle1" sx={{ alignSelf: 'center', fontWeight: 600, color: theme.palette.text.primary, mr: 2 }}>
@@ -172,7 +185,7 @@ const Dashboard: React.FC = () => {
           <Card className="glass-panel" sx={{ bgcolor: 'transparent', p: 2 }}>
             <CardContent>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, fontSize: '1rem', color: theme.palette.text.primary }}>
-                Vehicle Operational Costs Breakdown ($)
+                Vehicle Operational Costs Breakdown (₹)
               </Typography>
               <Box sx={{ height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
