@@ -17,10 +17,12 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data }) => {
   // Aggregate data by category
   const aggregated = data.reduce((acc, curr) => {
     const existing = acc.find(item => item.name === curr.type);
+    const numAmount = Number(curr.amount) || 0;
+    
     if (existing) {
-      existing.value += curr.amount;
+      existing.value += numAmount;
     } else {
-      acc.push({ name: curr.type, value: curr.amount });
+      acc.push({ name: curr.type, value: numAmount });
     }
     return acc;
   }, [] as { name: string; value: number }[]);
