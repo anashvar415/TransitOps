@@ -113,7 +113,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ initialData, onSubmit
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Cost ($)"
+              label="Cost (₹)"
               type="number"
               value={cost}
               onChange={(e) => setCost(e.target.value)}

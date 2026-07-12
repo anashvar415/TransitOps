@@ -46,12 +46,12 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data }) => {
             paddingAngle={5}
             dataKey="value"
           >
-            {aggregated.map((entry, index) => (
+            {aggregated.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
           <Tooltip 
-            formatter={(value: number) => `$${value.toLocaleString()}`}
+            formatter={(value: number) => `₹${value.toLocaleString('en-IN')}`}
             contentStyle={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary, border: `1px solid ${theme.palette.divider}`, borderRadius: '8px' }}
             itemStyle={{ color: theme.palette.text.primary }}
           />

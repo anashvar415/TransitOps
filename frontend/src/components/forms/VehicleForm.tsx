@@ -124,7 +124,7 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ initialData, onSubmit, onCanc
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Acquisition Cost ($)"
+              label="Acquisition Cost (₹)"
               type="number"
               value={acquisitionCost}
               onChange={(e) => setAcquisitionCost(e.target.value)}

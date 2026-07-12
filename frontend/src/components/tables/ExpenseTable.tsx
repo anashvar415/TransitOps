@@ -11,9 +11,12 @@ import {
   Tooltip,
   TablePagination,
   Chip,
+  Box,
+  Typography,
   useTheme,
 } from '@mui/material';
-import { Edit } from 'lucide-react';
+import { Edit, Receipt } from 'lucide-react';
+import { TableLoadingSkeleton } from '../LoadingSkeleton';
 
 export interface ExpenseRecord {
   id: string;
@@ -40,6 +43,7 @@ interface ExpenseTableProps {
   onPageChange: (newPage: number) => void;
   onRowsPerPageChange: (newRows: number) => void;
   onEdit: (record: ExpenseRecord) => void;
+  isLoading?: boolean;
 }
 
 const getCategoryColor = (type: string) => {
@@ -62,6 +66,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
   onPageChange,
   onRowsPerPageChange,
   onEdit,
+  isLoading = false,
 }) => {
   const theme = useTheme();
 
@@ -72,7 +77,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
           <TableRow sx={{ '& th': { color: 'text.secondary', fontWeight: 600, borderBottom: `1px solid ${theme.palette.divider}` } }}>
             <TableCell>Category</TableCell>
             <TableCell>Description</TableCell>
-            <TableCell>Amount ($)</TableCell>
+            <TableCell>Amount (₹)</TableCell>
             <TableCell>Date</TableCell>
             <TableCell>Linked Vehicle</TableCell>
             <TableCell>Linked Driver</TableCell>
@@ -86,8 +91,8 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
                 <Chip size="small" label={r.type} sx={{ bgcolor: getCategoryColor(r.type), color: '#fff', fontWeight: 600, fontSize: '0.7rem' }} />
               </TableCell>
               <TableCell>{r.notes}</TableCell>
-              <TableCell style={{ fontWeight: 600 }}>{Number(r.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-              <TableCell>{new Date(r.date).toLocaleDateString()}</TableCell>
+              <TableCell style={{ fontWeight: 600 }}>₹{Number(r.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+              <TableCell>{new Date(r.date).toLocaleDateString('en-IN')}</TableCell>
               <TableCell>{r.vehicle?.registrationNumber || '-'}</TableCell>
               <TableCell>{r.driver?.name || '-'}</TableCell>
               {canEdit && (
@@ -101,10 +106,15 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
               )}
             </TableRow>
           ))}
-          {records.length === 0 && (
+          {isLoading && <TableLoadingSkeleton rows={rowsPerPage} columns={canEdit ? 7 : 6} />}
+          {!isLoading && records.length === 0 && (
             <TableRow>
-              <TableCell colSpan={canEdit ? 7 : 6} align="center" sx={{ py: 6, color: 'text.secondary' }}>
-                No expense records found
+              <TableCell colSpan={canEdit ? 7 : 6} align="center" sx={{ py: 8 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <Receipt size={48} color={theme.palette.text.disabled} />
+                  <Typography variant="h6" color="text.secondary">No expense records found</Typography>
+                  <Typography variant="body2" color="text.secondary">Try adjusting your search or filters.</Typography>
+                </Box>
               </TableCell>
             </TableRow>
           )}
@@ -116,7 +126,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
         count={total}
         rowsPerPage={rowsPerPage}
         page={page}
-        onPageChange={(e, newPage) => onPageChange(newPage)}
+        onPageChange={(_, newPage) => onPageChange(newPage)}
         onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
         sx={{ color: 'text.secondary', borderTop: `1px solid ${theme.palette.divider}` }}
       />

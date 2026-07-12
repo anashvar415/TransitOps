@@ -11,17 +11,18 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import { Plus, Search } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import DriverTable, { Driver } from '../components/tables/DriverTable';
 import DriverForm from '../components/forms/DriverForm';
 
 const Drivers: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const isSafetyOfficer = user?.role === 'SAFETY_OFFICER';
   const queryClient = useQueryClient();
 
@@ -64,9 +65,11 @@ const Drivers: React.FC = () => {
       setDialogOpen(false);
       setFormError('');
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
+      showToast(selectedDriver ? 'Driver updated successfully' : 'Driver registered successfully');
     },
     onError: (err: any) => {
       setFormError(err.response?.data?.error || 'Validation error saving driver');
+      showToast('Failed to save driver', 'error');
     }
   });
 
@@ -153,22 +156,17 @@ const Drivers: React.FC = () => {
       </Box>
 
       {/* Drivers Table */}
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <DriverTable
-          drivers={filteredDrivers}
-          total={data?.total || 0}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          isSafetyOfficer={isSafetyOfficer}
-          onPageChange={setPage}
-          onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
-          onEdit={handleOpenEditDialog}
-        />
-      )}
+      <DriverTable
+        drivers={filteredDrivers}
+        total={data?.total || 0}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        isSafetyOfficer={isSafetyOfficer}
+        isLoading={isLoading}
+        onPageChange={setPage}
+        onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
+        onEdit={handleOpenEditDialog}
+      />
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>

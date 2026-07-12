@@ -10,17 +10,18 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import { Plus } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import MaintenanceTable, { MaintenanceRecord } from '../components/tables/MaintenanceTable';
 import MaintenanceForm from '../components/forms/MaintenanceForm';
 
 const Maintenance: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canEdit = user?.role === 'FLEET_MANAGER';
   const queryClient = useQueryClient();
 
@@ -59,9 +60,11 @@ const Maintenance: React.FC = () => {
       setFormError('');
       queryClient.invalidateQueries({ queryKey: ['maintenance'] });
       queryClient.invalidateQueries({ queryKey: ['all-vehicles'] });
+      showToast(selectedRecord ? 'Record updated successfully' : 'Record added successfully');
     },
     onError: (err: any) => {
       setFormError(err.response?.data?.error || 'Validation error saving maintenance record');
+      showToast('Failed to save record', 'error');
     }
   });
 
@@ -121,22 +124,17 @@ const Maintenance: React.FC = () => {
       </Box>
 
       {/* Table */}
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <MaintenanceTable
-          records={data?.data || []}
-          total={data?.total || 0}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          canEdit={canEdit}
-          onPageChange={setPage}
-          onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
-          onEdit={handleOpenEditDialog}
-        />
-      )}
+      <MaintenanceTable
+        records={data?.data || []}
+        total={data?.total || 0}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        canEdit={canEdit}
+        isLoading={isLoading}
+        onPageChange={setPage}
+        onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
+        onEdit={handleOpenEditDialog}
+      />
 
       {/* Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>

@@ -10,10 +10,13 @@ import {
   IconButton,
   Tooltip,
   TablePagination,
+  Box,
+  Typography,
   useTheme,
 } from '@mui/material';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Car } from 'lucide-react';
 import StatusBadge from '../StatusBadge';
+import { TableLoadingSkeleton } from '../LoadingSkeleton';
 
 export interface Vehicle {
   id: string;
@@ -37,6 +40,7 @@ interface VehicleTableProps {
   onRowsPerPageChange: (newRows: number) => void;
   onEdit: (vehicle: Vehicle) => void;
   onRetire: (id: string) => void;
+  isLoading?: boolean;
 }
 
 const VehicleTable: React.FC<VehicleTableProps> = ({
@@ -49,6 +53,7 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
   onRowsPerPageChange,
   onEdit,
   onRetire,
+  isLoading = false,
 }) => {
   const theme = useTheme();
 
@@ -73,8 +78,8 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
               <TableCell style={{ fontWeight: 600 }}>{v.registrationNumber}</TableCell>
               <TableCell>{v.name}</TableCell>
               <TableCell>{v.type}</TableCell>
-              <TableCell>{Number(v.maxLoadCapacityKg).toLocaleString()}</TableCell>
-              <TableCell>{Number(v.odometerKm).toLocaleString()}</TableCell>
+              <TableCell>{Number(v.maxLoadCapacityKg).toLocaleString('en-IN')}</TableCell>
+              <TableCell>{Number(v.odometerKm).toLocaleString('en-IN')}</TableCell>
               <TableCell>{v.region}</TableCell>
               <TableCell><StatusBadge status={v.status} /></TableCell>
               {isManager && (
@@ -95,10 +100,15 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
               )}
             </TableRow>
           ))}
-          {vehicles.length === 0 && (
+          {isLoading && <TableLoadingSkeleton rows={rowsPerPage} columns={isManager ? 8 : 7} />}
+          {!isLoading && vehicles.length === 0 && (
             <TableRow>
-              <TableCell colSpan={isManager ? 8 : 7} align="center" sx={{ py: 6, color: 'text.secondary' }}>
-                No vehicles found
+              <TableCell colSpan={isManager ? 8 : 7} align="center" sx={{ py: 8 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <Car size={48} color={theme.palette.text.disabled} />
+                  <Typography variant="h6" color="text.secondary">No vehicles found</Typography>
+                  <Typography variant="body2" color="text.secondary">Try adjusting your search or filters.</Typography>
+                </Box>
               </TableCell>
             </TableRow>
           )}
@@ -110,7 +120,7 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
         count={total}
         rowsPerPage={rowsPerPage}
         page={page}
-        onPageChange={(e, newPage) => onPageChange(newPage)}
+        onPageChange={(_, newPage) => onPageChange(newPage)}
         onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
         sx={{ color: 'text.secondary', borderTop: `1px solid ${theme.palette.divider}` }}
       />

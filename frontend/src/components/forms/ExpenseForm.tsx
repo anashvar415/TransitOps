@@ -102,7 +102,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ initialData, onSubmit, onCanc
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Amount ($)"
+              label="Amount (₹)"
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}

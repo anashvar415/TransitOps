@@ -10,17 +10,18 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import { Plus } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import ExpenseTable, { ExpenseRecord } from '../components/tables/ExpenseTable';
 import ExpenseForm from '../components/forms/ExpenseForm';
 
 const Expenses: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canEdit = user?.role === 'FLEET_MANAGER' || user?.role === 'FINANCIAL_ANALYST';
   const queryClient = useQueryClient();
 
@@ -59,9 +60,11 @@ const Expenses: React.FC = () => {
       setFormError('');
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // Refresh dashboard metrics
+      showToast(selectedRecord ? 'Expense updated successfully' : 'Expense logged successfully');
     },
     onError: (err: any) => {
       setFormError(err.response?.data?.error || 'Validation error saving expense');
+      showToast('Failed to save expense', 'error');
     }
   });
 
@@ -124,22 +127,17 @@ const Expenses: React.FC = () => {
       </Box>
 
       {/* Table */}
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <ExpenseTable
-          records={data?.data || []}
-          total={data?.total || 0}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          canEdit={canEdit}
-          onPageChange={setPage}
-          onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
-          onEdit={handleOpenEditDialog}
-        />
-      )}
+      <ExpenseTable
+        records={data?.data || []}
+        total={data?.total || 0}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        canEdit={canEdit}
+        isLoading={isLoading}
+        onPageChange={setPage}
+        onRowsPerPageChange={(newRows) => { setRowsPerPage(newRows); setPage(0); }}
+        onEdit={handleOpenEditDialog}
+      />
 
       {/* Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>

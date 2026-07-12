@@ -10,10 +10,13 @@ import {
   IconButton,
   Tooltip,
   TablePagination,
+  Box,
+  Typography,
   useTheme,
 } from '@mui/material';
-import { Edit } from 'lucide-react';
+import { Edit, Route as RouteIcon } from 'lucide-react';
 import StatusBadge from '../StatusBadge';
+import { TableLoadingSkeleton } from '../LoadingSkeleton';
 
 export interface Trip {
   id: string;
@@ -39,6 +42,7 @@ interface TripTableProps {
   onPageChange: (newPage: number) => void;
   onRowsPerPageChange: (newRows: number) => void;
   onEdit: (trip: Trip) => void;
+  isLoading?: boolean;
 }
 
 const TripTable: React.FC<TripTableProps> = ({
@@ -50,6 +54,7 @@ const TripTable: React.FC<TripTableProps> = ({
   onPageChange,
   onRowsPerPageChange,
   onEdit,
+  isLoading = false,
 }) => {
   const theme = useTheme();
 
@@ -72,7 +77,7 @@ const TripTable: React.FC<TripTableProps> = ({
             <TableRow key={t.id} sx={{ '& td': { borderBottom: `1px solid ${theme.palette.divider}`, color: 'text.primary' } }}>
               <TableCell style={{ fontWeight: 600 }}>{t.source}</TableCell>
               <TableCell style={{ fontWeight: 600 }}>{t.destination}</TableCell>
-              <TableCell>{new Date(t.departureTime).toLocaleString()}</TableCell>
+              <TableCell>{new Date(t.departureTime).toLocaleString('en-IN')}</TableCell>
               <TableCell>{t.driver?.name || 'Unassigned'}</TableCell>
               <TableCell>{t.vehicle?.registrationNumber || 'Unassigned'}</TableCell>
               <TableCell><StatusBadge status={t.status} /></TableCell>
@@ -87,10 +92,15 @@ const TripTable: React.FC<TripTableProps> = ({
               )}
             </TableRow>
           ))}
-          {trips.length === 0 && (
+          {isLoading && <TableLoadingSkeleton rows={rowsPerPage} columns={canEdit ? 7 : 6} />}
+          {!isLoading && trips.length === 0 && (
             <TableRow>
-              <TableCell colSpan={canEdit ? 7 : 6} align="center" sx={{ py: 6, color: 'text.secondary' }}>
-                No trips found
+              <TableCell colSpan={canEdit ? 7 : 6} align="center" sx={{ py: 8 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <RouteIcon size={48} color={theme.palette.text.disabled} />
+                  <Typography variant="h6" color="text.secondary">No trips found</Typography>
+                  <Typography variant="body2" color="text.secondary">Try adjusting your search or filters.</Typography>
+                </Box>
               </TableCell>
             </TableRow>
           )}
@@ -102,7 +112,7 @@ const TripTable: React.FC<TripTableProps> = ({
         count={total}
         rowsPerPage={rowsPerPage}
         page={page}
-        onPageChange={(e, newPage) => onPageChange(newPage)}
+        onPageChange={(_, newPage) => onPageChange(newPage)}
         onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
         sx={{ color: 'text.secondary', borderTop: `1px solid ${theme.palette.divider}` }}
       />

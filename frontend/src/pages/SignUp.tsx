@@ -12,16 +12,18 @@ import {
   InputAdornment,
   IconButton,
   Link,
+  MenuItem
 } from '@mui/material';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
-import api from '../services/api';
+import { Eye, EyeOff, Lock, Mail, User, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const Login: React.FC = () => {
+const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('FLEET_MANAGER');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,19 +34,28 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await api.post('/auth/login', { email, password });
-      const { accessToken, user } = res.data;
+      // Simulate API call for Sign Up since there is no backend endpoint
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      login(accessToken, user);
+      // Mocked successful response
+      const mockAccessToken = 'mock_jwt_token_for_new_user';
+      const mockUser = {
+        id: 'new_user_id',
+        name: name,
+        email: email,
+        role: role,
+      };
+
+      login(mockAccessToken, mockUser);
 
       // Redirect depending on user role permissions
-      if (user.role === 'SAFETY_OFFICER') {
+      if (mockUser.role === 'SAFETY_OFFICER') {
         navigate('/drivers');
       } else {
         navigate('/dashboard');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid credentials or connection error');
+      setError(err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -86,7 +97,7 @@ const Login: React.FC = () => {
               TransitOps
             </Typography>
             <Typography variant="body2" sx={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
-              Smart Transport Operations Platform
+              Create a new account
             </Typography>
           </Box>
 
@@ -99,9 +110,34 @@ const Login: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
+              label="Full Name"
+              variant="outlined"
+              margin="normal"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start" sx={{ color: '#6b7280' }}>
+                    <User size={18} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                mb: 2.5,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '10px',
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
+                },
+              }}
+            />
+
+            <TextField
+              fullWidth
               label="Email Address"
               variant="outlined"
               margin="normal"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -120,6 +156,34 @@ const Login: React.FC = () => {
                 },
               }}
             />
+
+            <TextField
+              fullWidth
+              select
+              label="Role"
+              variant="outlined"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start" sx={{ color: '#6b7280' }}>
+                    <Shield size={18} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                mb: 2.5,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '10px',
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
+                },
+              }}
+            >
+              <MenuItem value="FLEET_MANAGER">Fleet Manager</MenuItem>
+              <MenuItem value="DRIVER">Driver</MenuItem>
+              <MenuItem value="SAFETY_OFFICER">Safety Officer</MenuItem>
+              <MenuItem value="FINANCIAL_ANALYST">Financial Analyst</MenuItem>
+            </TextField>
 
             <TextField
               fullWidth
@@ -169,19 +233,16 @@ const Login: React.FC = () => {
                 },
               }}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
             </Button>
           </form>
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>
-              Don't have an account?{' '}
-              <Link component={RouterLink} to="/signup" sx={{ color: '#8b5cf6', textDecoration: 'none', fontWeight: 600 }}>
-                Sign Up
+              Already have an account?{' '}
+              <Link component={RouterLink} to="/login" sx={{ color: '#8b5cf6', textDecoration: 'none', fontWeight: 600 }}>
+                Sign In
               </Link>
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#4b5563', display: 'block', mt: 2 }}>
-              TransitOps v1.0.0
             </Typography>
           </Box>
         </CardContent>
@@ -190,4 +251,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default SignUp;
