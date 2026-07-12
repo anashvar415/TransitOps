@@ -3,7 +3,7 @@ $matlabBin = "C:\Program Files\MATLAB\R2025a\bin\win64"
 $pgBin = "C:\Program Files\MATLAB\R2025a\sys\postgresql\win64\PostgreSQL\bin"
 $env:PATH = "$matlabBin;$pgBin;$env:PATH"
 
-$dbDir = "C:\Users\ASUS\.gemini\antigravity\scratch\transitops\pg_data"
+$dbDir = "$env:USERPROFILE\.gemini\antigravity\scratch\transitops\pg_data"
 
 if (-not (Test-Path $dbDir)) {
     Write-Host "Creating database directory and initializing database..." -ForegroundColor Cyan
