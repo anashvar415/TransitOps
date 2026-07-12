@@ -1,6 +1,6 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 interface ExpenseChartProps {
   data: {
@@ -12,6 +12,8 @@ interface ExpenseChartProps {
 const COLORS = ['#8b5cf6', '#6366f1', '#ec4899', '#14b8a6', '#f59e0b', '#ef4444'];
 
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ data }) => {
+  const theme = useTheme();
+
   // Aggregate data by category
   const aggregated = data.reduce((acc, curr) => {
     const existing = acc.find(item => item.name === curr.type);
@@ -26,7 +28,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data }) => {
   if (aggregated.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
-        <Typography sx={{ color: '#9ca3af' }}>No expense data available for chart.</Typography>
+        <Typography sx={{ color: theme.palette.text.secondary }}>No expense data available for chart.</Typography>
       </Box>
     );
   }
@@ -50,10 +52,10 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data }) => {
           </Pie>
           <Tooltip 
             formatter={(value: number) => `$${value.toLocaleString()}`}
-            contentStyle={{ backgroundColor: '#161823', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-            itemStyle={{ color: '#f3f4f6' }}
+            contentStyle={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary, border: `1px solid ${theme.palette.divider}`, borderRadius: '8px' }}
+            itemStyle={{ color: theme.palette.text.primary }}
           />
-          <Legend wrapperStyle={{ color: '#9ca3af' }} />
+          <Legend wrapperStyle={{ color: theme.palette.text.secondary }} />
         </PieChart>
       </ResponsiveContainer>
     </Box>

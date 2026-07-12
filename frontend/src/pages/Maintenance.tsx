@@ -140,7 +140,7 @@ const Maintenance: React.FC = () => {
 
       {/* Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 600, color: '#f3f4f6', bgcolor: '#161823' }}>
+        <DialogTitle sx={{ fontWeight: 600, color: 'text.primary', bgcolor: 'background.paper' }}>
           {selectedRecord ? 'Update Maintenance Status' : 'Log Maintenance Issue'}
         </DialogTitle>
         <MaintenanceForm 

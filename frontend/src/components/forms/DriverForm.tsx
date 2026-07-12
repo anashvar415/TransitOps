@@ -68,7 +68,7 @@ const DriverForm: React.FC<DriverFormProps> = ({ initialData, onSubmit, onCancel
 
   return (
     <form onSubmit={handleSubmit}>
-      <DialogContent sx={{ bgcolor: '#161823', color: '#f3f4f6' }}>
+      <DialogContent sx={{ bgcolor: 'background.paper', color: 'text.primary' }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
         <Grid container spacing={2}>
@@ -151,8 +151,8 @@ const DriverForm: React.FC<DriverFormProps> = ({ initialData, onSubmit, onCancel
           )}
         </Grid>
       </DialogContent>
-      <DialogActions sx={{ p: 3, bgcolor: '#161823' }}>
-        <Button onClick={onCancel} disabled={loading} sx={{ color: '#9ca3af' }}>Cancel</Button>
+      <DialogActions sx={{ p: 3, bgcolor: 'background.paper' }}>
+        <Button onClick={onCancel} disabled={loading} sx={{ color: 'text.secondary' }}>Cancel</Button>
         <Button type="submit" disabled={loading} variant="contained" sx={{ bgcolor: '#8b5cf6', '&:hover': { bgcolor: '#7c3aed' } }}>
           Save Driver
         </Button>

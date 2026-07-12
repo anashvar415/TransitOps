@@ -10,6 +10,7 @@ import {
   IconButton,
   Tooltip,
   TablePagination,
+  useTheme,
 } from '@mui/material';
 import { Edit } from 'lucide-react';
 import StatusBadge from '../StatusBadge';
@@ -48,11 +49,13 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
   onRowsPerPageChange,
   onEdit,
 }) => {
+  const theme = useTheme();
+
   return (
-    <TableContainer component={Paper} className="glass-panel" sx={{ bgcolor: 'rgba(22, 24, 35, 0.4)' }}>
+    <TableContainer component={Paper} className="glass-panel" sx={{ bgcolor: 'transparent' }}>
       <Table>
         <TableHead>
-          <TableRow sx={{ '& th': { color: '#9ca3af', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.08)' } }}>
+          <TableRow sx={{ '& th': { color: 'text.secondary', fontWeight: 600, borderBottom: `1px solid ${theme.palette.divider}` } }}>
             <TableCell>Vehicle</TableCell>
             <TableCell>Description</TableCell>
             <TableCell>Cost ($)</TableCell>
@@ -64,7 +67,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
         </TableHead>
         <TableBody>
           {records.map((r) => (
-            <TableRow key={r.id} sx={{ '& td': { borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#f3f4f6' } }}>
+            <TableRow key={r.id} sx={{ '& td': { borderBottom: `1px solid ${theme.palette.divider}`, color: 'text.primary' } }}>
               <TableCell style={{ fontWeight: 600 }}>{r.vehicle?.registrationNumber || 'Unknown'}</TableCell>
               <TableCell>{r.description}</TableCell>
               <TableCell>{Number(r.cost).toLocaleString()}</TableCell>
@@ -74,7 +77,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
               {canEdit && (
                 <TableCell align="right">
                   <Tooltip title="Update Record">
-                    <IconButton size="small" onClick={() => onEdit(r)} sx={{ color: '#9ca3af', '&:hover': { color: '#8b5cf6' } }}>
+                    <IconButton size="small" onClick={() => onEdit(r)} sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
                       <Edit size={16} />
                     </IconButton>
                   </Tooltip>
@@ -84,7 +87,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
           ))}
           {records.length === 0 && (
             <TableRow>
-              <TableCell colSpan={canEdit ? 7 : 6} align="center" sx={{ py: 6, color: '#6b7280' }}>
+              <TableCell colSpan={canEdit ? 7 : 6} align="center" sx={{ py: 6, color: 'text.secondary' }}>
                 No maintenance records found
               </TableCell>
             </TableRow>
@@ -99,7 +102,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
         page={page}
         onPageChange={(e, newPage) => onPageChange(newPage)}
         onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
-        sx={{ color: '#9ca3af', borderTop: '1px solid rgba(255,255,255,0.08)' }}
+        sx={{ color: 'text.secondary', borderTop: `1px solid ${theme.palette.divider}` }}
       />
     </TableContainer>
   );

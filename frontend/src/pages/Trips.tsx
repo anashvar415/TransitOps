@@ -163,7 +163,7 @@ const Trips: React.FC = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontWeight: 600, color: '#f3f4f6', bgcolor: '#161823' }}>
+        <DialogTitle sx={{ fontWeight: 600, color: 'text.primary', bgcolor: 'background.paper' }}>
           {selectedTrip ? 'Edit Trip Status' : 'Dispatch New Trip'}
         </DialogTitle>
         <TripForm 

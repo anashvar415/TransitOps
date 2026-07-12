@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import {
   Grid,
   Card,
@@ -12,6 +11,7 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  useTheme,
 } from '@mui/material';
 import {
   Truck,
@@ -55,12 +55,18 @@ interface CostBreakdown {
 }
 
 const Dashboard: React.FC = () => {
+  const theme = useTheme();
+  const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
+  const [utilizationTrend, setUtilizationTrend] = useState<any[]>([]);
+  const [costBreakdown, setCostBreakdown] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [regionFilter, setRegionFilter] = useState('');
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['dashboard', typeFilter, regionFilter],
-    queryFn: async () => {
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
       const params: any = {};
       if (typeFilter) params.type = typeFilter;
       if (regionFilter) params.region = regionFilter;
@@ -71,15 +77,21 @@ const Dashboard: React.FC = () => {
         api.get('/reports/operational-cost'),
       ]);
 
-      return {
-        kpis: kpisRes.data as DashboardKPIs,
-        utilizationTrend: trendRes.data,
-        costBreakdown: costRes.data.slice(0, 5) as CostBreakdown[],
-      };
-    },
-  });
+      setKpis(kpisRes.data as DashboardKPIs);
+      setUtilizationTrend(trendRes.data);
+      setCostBreakdown(costRes.data.slice(0, 5) as CostBreakdown[]);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (isLoading) {
+  useEffect(() => {
+    fetchDashboardData();
+  }, [typeFilter, regionFilter]);
+
+  if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
         <CircularProgress color="primary" />
@@ -88,10 +100,8 @@ const Dashboard: React.FC = () => {
   }
 
   if (error) {
-    return <Alert severity="error">{(error as any).response?.data?.error || 'Failed to load dashboard data'}</Alert>;
+    return <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>;
   }
-
-  const { kpis, utilizationTrend, costBreakdown } = data || {};
 
   const kpiList = [
     { title: 'Active Vehicles', value: kpis?.activeVehicles, icon: <Truck size={24} color="#3b82f6" />, desc: 'Vehicles currently on trip' },
@@ -107,7 +117,7 @@ const Dashboard: React.FC = () => {
     <Box>
       {/* Filter controls */}
       <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }} className="glass-panel" style={{ padding: '16px' }}>
-        <Typography variant="subtitle1" sx={{ alignSelf: 'center', fontWeight: 600, color: '#f3f4f6', mr: 2 }}>
+        <Typography variant="subtitle1" sx={{ alignSelf: 'center', fontWeight: 600, color: theme.palette.text.primary, mr: 2 }}>
           Filters
         </Typography>
         <FormControl sx={{ minWidth: 160 }} size="small">
@@ -145,9 +155,9 @@ const Dashboard: React.FC = () => {
       <Grid container spacing={3}>
         {/* Fleet Utilization Trend */}
         <Grid item xs={12} lg={6}>
-          <Card className="glass-panel" sx={{ bgcolor: 'rgba(22, 24, 35, 0.6)', p: 2 }}>
+          <Card className="glass-panel" sx={{ bgcolor: 'transparent', p: 2 }}>
             <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, fontSize: '1rem', color: '#f3f4f6' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, fontSize: '1rem', color: theme.palette.text.primary }}>
                 Fleet Utilization Trend (%)
               </Typography>
               <Box sx={{ height: 300 }}>
@@ -159,18 +169,18 @@ const Dashboard: React.FC = () => {
 
         {/* Cost Breakdown per Vehicle */}
         <Grid item xs={12} lg={6}>
-          <Card className="glass-panel" sx={{ bgcolor: 'rgba(22, 24, 35, 0.6)', p: 2 }}>
+          <Card className="glass-panel" sx={{ bgcolor: 'transparent', p: 2 }}>
             <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, fontSize: '1rem', color: '#f3f4f6' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, fontSize: '1rem', color: theme.palette.text.primary }}>
                 Vehicle Operational Costs Breakdown ($)
               </Typography>
               <Box sx={{ height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={costBreakdown}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="registrationNumber" stroke="#6b7280" fontSize={12} />
-                    <YAxis stroke="#6b7280" fontSize={12} />
-                    <ChartTooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: 'rgba(255,255,255,0.1)' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis dataKey="registrationNumber" stroke={theme.palette.text.secondary} fontSize={12} />
+                    <YAxis stroke={theme.palette.text.secondary} fontSize={12} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary, borderColor: theme.palette.divider }} />
                     <Legend />
                     <Bar dataKey="fuelCost" name="Fuel Cost" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="maintenanceCost" name="Maintenance" fill="#f59e0b" radius={[4, 4, 0, 0]} />

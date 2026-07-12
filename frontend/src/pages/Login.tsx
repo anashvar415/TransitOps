@@ -56,7 +56,7 @@ const Login: React.FC = () => {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0a0b10 0%, #12131a 100%)',
+        background: 'linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%)',
         p: 2,
       }}
     >
@@ -65,7 +65,7 @@ const Login: React.FC = () => {
         sx={{
           maxWidth: 420,
           width: '100%',
-          bgcolor: 'rgba(22, 24, 35, 0.75)',
+          bgcolor: 'var(--glass-bg)',
           borderRadius: '16px',
         }}
       >
@@ -84,7 +84,7 @@ const Login: React.FC = () => {
             >
               TransitOps
             </Typography>
-            <Typography variant="body2" sx={{ color: '#9ca3af', fontWeight: 500 }}>
+            <Typography variant="body2" sx={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
               Smart Transport Operations Platform
             </Typography>
           </Box>

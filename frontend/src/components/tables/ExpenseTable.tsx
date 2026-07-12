@@ -11,6 +11,7 @@ import {
   Tooltip,
   TablePagination,
   Chip,
+  useTheme,
 } from '@mui/material';
 import { Edit } from 'lucide-react';
 
@@ -62,11 +63,13 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
   onRowsPerPageChange,
   onEdit,
 }) => {
+  const theme = useTheme();
+
   return (
-    <TableContainer component={Paper} className="glass-panel" sx={{ bgcolor: 'rgba(22, 24, 35, 0.4)' }}>
+    <TableContainer component={Paper} className="glass-panel" sx={{ bgcolor: 'transparent' }}>
       <Table>
         <TableHead>
-          <TableRow sx={{ '& th': { color: '#9ca3af', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.08)' } }}>
+          <TableRow sx={{ '& th': { color: 'text.secondary', fontWeight: 600, borderBottom: `1px solid ${theme.palette.divider}` } }}>
             <TableCell>Category</TableCell>
             <TableCell>Description</TableCell>
             <TableCell>Amount ($)</TableCell>
@@ -78,7 +81,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
         </TableHead>
         <TableBody>
           {records.map((r) => (
-            <TableRow key={r.id} sx={{ '& td': { borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#f3f4f6' } }}>
+            <TableRow key={r.id} sx={{ '& td': { borderBottom: `1px solid ${theme.palette.divider}`, color: 'text.primary' } }}>
               <TableCell>
                 <Chip size="small" label={r.type} sx={{ bgcolor: getCategoryColor(r.type), color: '#fff', fontWeight: 600, fontSize: '0.7rem' }} />
               </TableCell>
@@ -90,7 +93,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
               {canEdit && (
                 <TableCell align="right">
                   <Tooltip title="Update Record">
-                    <IconButton size="small" onClick={() => onEdit(r)} sx={{ color: '#9ca3af', '&:hover': { color: '#8b5cf6' } }}>
+                    <IconButton size="small" onClick={() => onEdit(r)} sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
                       <Edit size={16} />
                     </IconButton>
                   </Tooltip>
@@ -100,7 +103,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
           ))}
           {records.length === 0 && (
             <TableRow>
-              <TableCell colSpan={canEdit ? 7 : 6} align="center" sx={{ py: 6, color: '#6b7280' }}>
+              <TableCell colSpan={canEdit ? 7 : 6} align="center" sx={{ py: 6, color: 'text.secondary' }}>
                 No expense records found
               </TableCell>
             </TableRow>
@@ -115,7 +118,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
         page={page}
         onPageChange={(e, newPage) => onPageChange(newPage)}
         onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
-        sx={{ color: '#9ca3af', borderTop: '1px solid rgba(255,255,255,0.08)' }}
+        sx={{ color: 'text.secondary', borderTop: `1px solid ${theme.palette.divider}` }}
       />
     </TableContainer>
   );
